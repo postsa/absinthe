@@ -6,11 +6,9 @@
 #include "shaders/Program.h"
 #include "shaders/Shader.h"
 #include "models/Square.h"
-#include "models/Triangle.h"
 #include "includes/glm/glm.hpp"
 #include "includes/glm/gtc/matrix_transform.hpp"
 #include "models/OrientationWidget.h"
-#include <iostream>
 
 void rescale_framebuffer(float width, float height, GLuint renderBuffer, GLuint texture) {
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -62,7 +60,7 @@ int main(int argc, char *argv[]) {
     bool show_debug_log = false;
     bool show_render = true;
     bool wireframeMode = false;
-
+    float rotationAmount = 0;
 
     GLuint texture;
     GLuint frameBuffer;
@@ -105,19 +103,18 @@ int main(int argc, char *argv[]) {
     Models::OrientationWidget widget = Models::OrientationWidget();
 
 
-    float cameraYaw = -90.0f;
-    float cameraPitch = 0.0f;
+    float cameraYaw = 90.0f;
+    float cameraPitch = -83.380379f;
+
 
     glm::vec3 cameraFront = glm::vec3(-1.0f, 0.0f, 0.0f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 0.0f, 1.0f);
-    glm::vec3 cameraForward = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec cameraRight = glm::cross(cameraFront, cameraUp);
+    glm::vec3 cameraForward = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 model = glm::mat4(1.0f);
 
-    model = glm::rotate(model, glm::radians(-60.0f),
-                        glm::vec3(1.0f, 0.0f, 0.0f));
-
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.141421f, 3.0f);
 
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) 800 /
                                                            (float) 600, 0.1f, 100.0f);
@@ -125,12 +122,19 @@ int main(int argc, char *argv[]) {
     glm::vec3 direction;
 
     bool viewPortControls = false;
+    bool orbit = false;
+
+    const float cameraSpeed = 0.2f;
+
+    float r = 3.0f;
+    const float maxHeight = r - 0.01;
+    const float minHeight = 0.05;
+
 
     SDL_Event e;
     bool quit = false;
     while (!quit) {
 
-        const float cameraSpeed = 0.2f;
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
@@ -147,49 +151,102 @@ int main(int argc, char *argv[]) {
                 if (e.key.keysym.sym == SDLK_v) {
                     viewPortControls = !viewPortControls;
                 }
+                if (e.key.keysym.sym == SDLK_ESCAPE) {
+                    viewPortControls = false;
+                }
+                if (e.key.keysym.sym == SDLK_o) {
+                    orbit = !orbit;
+                }
             }
             if (viewPortControls)
                 if (e.type == SDL_KEYDOWN) {
-                    if (e.key.keysym.sym == SDLK_ESCAPE) {
-                        viewPortControls = false;
-                    }
-                    if (e.key.keysym.sym == SDLK_LEFT) {
-                        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) *
-                                     cameraSpeed;
-                    }
-                    if (e.key.keysym.sym == SDLK_RIGHT) {
-                        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) *
-                                     cameraSpeed;
-                    }
-                    if (e.key.keysym.sym == SDLK_UP) {
-                        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraForward)) *
-                                     cameraSpeed;
-                    }
-                    if (e.key.keysym.sym == SDLK_DOWN) {
-                        cameraPos += glm::normalize(glm::cross(cameraFront, cameraForward)) *
-                                     cameraSpeed;
-                    }
-                    if (e.key.keysym.sym == SDLK_w) {
-                        cameraPos += cameraUp * cameraSpeed;
-                    }
-                    if (e.key.keysym.sym == SDLK_s) {
-                        cameraPos -= cameraUp * cameraSpeed;
+                    if (!orbit) {
+                        if (e.key.keysym.sym == SDLK_LEFT) {
+                            cameraPos -= glm::normalize(cameraRight) *
+                                         cameraSpeed;
+                        }
+                        if (e.key.keysym.sym == SDLK_RIGHT) {
+                            cameraPos += glm::normalize(cameraRight) *
+                                         cameraSpeed;
+                        }
+                        if (e.key.keysym.sym == SDLK_UP) {
+                            cameraPos -= cameraForward * cameraSpeed;
+                        }
+                        if (e.key.keysym.sym == SDLK_DOWN) {
+                            cameraPos += cameraForward * cameraSpeed;
+                        }
+                        if (e.key.keysym.sym == SDLK_w) {
+                            cameraPos += cameraUp * cameraSpeed;
+                        }
+                        if (e.key.keysym.sym == SDLK_s) {
+                            cameraPos -= cameraUp * cameraSpeed;
+                        }
+                    } else {
+                        if (e.key.keysym.sym == SDLK_LEFT) {
+                            cameraYaw = cameraYaw - 10 * cameraSpeed;
+                            if (cameraYaw < 0) cameraYaw = 360;
+                            float hyp = glm::abs(glm::sqrt(cameraPos.x * cameraPos.x + cameraPos.y * cameraPos.y));
+                            float theta = cameraYaw;
+                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                        }
+                        if (e.key.keysym.sym == SDLK_RIGHT) {
+                            cameraYaw = cameraYaw + 10 * cameraSpeed;
+                            if (cameraYaw > 360) cameraYaw = 0;
+                            float hyp = glm::abs(glm::sqrt(cameraPos.x * cameraPos.x + cameraPos.y * cameraPos.y));
+                            float theta = cameraYaw;
+                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                        }
+                        if (e.key.keysym.sym == SDLK_UP) {
+                            float h2 = cameraPos.z + cameraSpeed;
+                            if (h2 > maxHeight)
+                                h2 = maxHeight - 0.01f;
+                            cameraPos.z = h2;
+                            cameraPitch = -90 + glm::degrees(glm::acos(h2 / r));
+                            float hyp = glm::abs(glm::sqrt(r * r - h2 * h2));
+                            float theta = cameraYaw;
+                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                        }
+                        if (e.key.keysym.sym == SDLK_DOWN) {
+                            float h2 = cameraPos.z - cameraSpeed;
+                            if (h2 < minHeight)
+                                h2 = minHeight + 0.01f;
+                            cameraPos.z = h2;
+                            cameraPitch = -90 + glm::degrees(glm::acos(h2 / r));
+                            float hyp = glm::abs(glm::sqrt(r * r - h2 * h2));
+                            float theta = cameraYaw;
+                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                        }
+                        if (e.key.keysym.sym == SDLK_z) {
+                            r += 0.2f;
+                        }
+                        if (e.key.keysym.sym == SDLK_z) {
+                            r -= 0.2f;
+                        }
                     }
                 }
         }
 
+
         direction.x = cos(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
-        direction.z = sin(glm::radians(cameraYaw) * cos(glm::radians(cameraPitch)));
-        direction.y = sin(glm::radians(cameraPitch));
+        direction.y = sin(glm::radians(cameraYaw) * cos(glm::radians(cameraPitch)));
+        direction.z = sin(glm::radians(cameraPitch));
         cameraFront = glm::normalize(direction);
 
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+        glm::vec3 center = cameraPos + cameraFront;
+        if (orbit)
+            center = glm::vec3(0, 0, 0);
+
+        view = glm::lookAt(cameraPos, center, cameraUp);
 
         if (ImGui::GetIO().KeyAlt)
             printf("");
 
         static int counter = 0;
-        static float positionDiag = 0.0f;
         static float rColor = 0.5f;
         static float gColor = 0.5f;
         static float bColor = 0.5f;
@@ -201,16 +258,11 @@ int main(int argc, char *argv[]) {
         ImGui::Checkbox("Show Render", &show_render);
         ImGui::Checkbox("Wireframe Mode", &wireframeMode);
         ImGui::Checkbox("Control View Port", &viewPortControls);
-        ImGui::SliderFloat("Position", &positionDiag, -1.0f, 1.0f);
         ImGui::SliderFloat("R Value", &rColor, 0.0f, 1.0f);
         ImGui::SliderFloat("G Value", &gColor, 0.0f, 1.0f);
         ImGui::SliderFloat("B Value", &bColor, 0.0f, 1.0f);
 
-        if (ImGui::Button("Button"))
-            counter++;
-
         ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                     ImGui::GetIO().Framerate);
@@ -236,8 +288,17 @@ int main(int argc, char *argv[]) {
             ImGui::Text("X position %f", cameraPos.x);
             ImGui::Text("Y position %f", cameraPos.y);
             ImGui::Text("Z position %f", cameraPos.z);
+            ImGui::Text("Radius %f", r);
             ImGui::Text("Yaw %f", cameraYaw);
             ImGui::Text("Pitch %f", cameraPitch);
+            ImGui::End();
+            ImGui::Begin("Camera Control");
+            ImGui::Checkbox("Orbit", &orbit);
+            ImGui::SliderFloat("Rotation", &rotationAmount, -90.0f, 90.0f);
+            if (ImGui::Button("Rotate")) {
+                model = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAmount),
+                                    glm::vec3(0.0f, 1.0f, 0.0f));
+            }
             ImGui::End();
             ImGui::Begin("Viewport");
             const float window_width = ImGui::GetContentRegionAvail().x;

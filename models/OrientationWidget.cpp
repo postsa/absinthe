@@ -6,10 +6,10 @@ namespace Models {
         drawMode = GL_LINES;
 
         float v[] = {
-                0.0f, 0.0f, 0.0f,
-                0.5f, 0.0f, 0.0f,
-                0.0f, 0.5f, 0.0f,
-                0.0f, 0.0, 0.5f
+                -1.0f, -1.0f, 0.0f,
+                -0.5f, -1.0f, 0.0f,
+                -1.0f, -0.5f, 0.0f,
+                -1.0f, -1.0f, 0.5f
         };
         unsigned int i[] = {
                 0, 1, 0, 2, 0, 3
