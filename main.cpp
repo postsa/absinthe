@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
     while (!quit) {
 
         const float maxHeight = r - 0.0001;
-        const float minHeight = 0.05;
+        const float minHeight = -1 * maxHeight;
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
