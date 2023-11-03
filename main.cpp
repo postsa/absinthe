@@ -107,12 +107,10 @@ int main(int argc, char *argv[]) {
     float cameraPitch = -83.380379f;
 
 
-    glm::vec3 cameraFront = glm::vec3(-1.0f, 0.0f, 0.0f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 0.0f, 1.0f);
-    glm::vec cameraRight = glm::cross(cameraFront, cameraUp);
-    glm::vec3 cameraForward = glm::vec3(1.0f, 0.0f, 0.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 model = glm::mat4(1.0f);
+    glm::vec3 translation = glm::vec3(0.0f);
 
     glm::vec3 cameraPos = glm::vec3(0.0f, 0.141421f, 3.0f);
 
@@ -128,6 +126,7 @@ int main(int argc, char *argv[]) {
 
     float r = 3.0f;
 
+    glm::vec3 center = glm::vec3(0, 0, 0);
 
     SDL_Event e;
     bool quit = false;
@@ -153,9 +152,6 @@ int main(int argc, char *argv[]) {
                 }
                 if (e.key.keysym.sym == SDLK_ESCAPE) {
                     viewPortControls = false;
-                }
-                if (e.key.keysym.sym == SDLK_o) {
-                    orbit = !orbit;
                 }
             }
             if (viewPortControls)
@@ -214,26 +210,47 @@ int main(int argc, char *argv[]) {
                         cameraPos.y = hyp * glm::sin(glm::radians(theta));
                         cameraPos.x = hyp * glm::cos(glm::radians(theta));
                     }
+                    if (e.key.keysym.sym == SDLK_w) {
+                        float theta = cameraYaw;
+                        float yInc = cameraSpeed * (glm::sin(glm::radians(theta)));
+                        float xInc = cameraSpeed * (glm::cos(glm::radians(theta)));
+                        translation.x += xInc;
+                        translation.y += yInc;
+                    }
+                    if (e.key.keysym.sym == SDLK_s) {
+                        float theta = cameraYaw;
+                        float yInc = cameraSpeed * (glm::sin(glm::radians(theta)));
+                        float xInc = cameraSpeed * (glm::cos(glm::radians(theta)));
+                        translation.x -= xInc;
+                        translation.y -= yInc;
+                    }
+                    if (e.key.keysym.sym == SDLK_a) {
+                        float theta = cameraYaw - 90;
+                        float yInc = cameraSpeed * (glm::sin(glm::radians(theta)));
+                        float xInc = cameraSpeed * (glm::cos(glm::radians(theta)));
+                        translation.x -= xInc;
+                        translation.y -= yInc;
+                    }
+                    if (e.key.keysym.sym == SDLK_d) {
+                        float theta = cameraYaw - 90;
+                        float yInc = cameraSpeed * (glm::sin(glm::radians(theta)));
+                        float xInc = cameraSpeed * (glm::cos(glm::radians(theta)));
+                        translation.x += xInc;
+                        translation.y += yInc;
+                    }
+                    if (e.key.keysym.sym == SDLK_c) {
+                        translation = glm::vec3(0.0f);
+                    }
                 }
         }
 
 
-        direction.x = cos(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
-        direction.y = sin(glm::radians(cameraYaw) * cos(glm::radians(cameraPitch)));
-        direction.z = sin(glm::radians(cameraPitch));
-        cameraFront = glm::normalize(direction);
-
-
-        glm::vec3 center = cameraPos + cameraFront;
-        if (orbit)
-            center = glm::vec3(0, 0, 0);
-
         view = glm::lookAt(cameraPos, center, cameraUp);
+        view = glm::translate(view, translation);
 
         if (ImGui::GetIO().KeyAlt)
             printf("");
 
-        static int counter = 0;
         static float rColor = 0.5f;
         static float gColor = 0.5f;
         static float bColor = 0.5f;
@@ -291,6 +308,9 @@ int main(int argc, char *argv[]) {
                 float theta = cameraYaw;
                 cameraPos.y = hyp * glm::sin(glm::radians(theta));
                 cameraPos.x = hyp * glm::cos(glm::radians(theta));
+            }
+            if (ImGui::Button("Center")) {
+                translation = glm::vec3(0.0f);
             }
             ImGui::End();
             ImGui::Begin("Viewport");
