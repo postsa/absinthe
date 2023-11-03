@@ -122,19 +122,19 @@ int main(int argc, char *argv[]) {
     glm::vec3 direction;
 
     bool viewPortControls = false;
-    bool orbit = false;
+    bool orbit = true;
 
     const float cameraSpeed = 0.2f;
 
     float r = 3.0f;
-    const float maxHeight = r - 0.01;
-    const float minHeight = 0.05;
 
 
     SDL_Event e;
     bool quit = false;
     while (!quit) {
 
+        const float maxHeight = r - 0.0001;
+        const float minHeight = 0.05;
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
@@ -160,72 +160,59 @@ int main(int argc, char *argv[]) {
             }
             if (viewPortControls)
                 if (e.type == SDL_KEYDOWN) {
-                    if (!orbit) {
-                        if (e.key.keysym.sym == SDLK_LEFT) {
-                            cameraPos -= glm::normalize(cameraRight) *
-                                         cameraSpeed;
-                        }
-                        if (e.key.keysym.sym == SDLK_RIGHT) {
-                            cameraPos += glm::normalize(cameraRight) *
-                                         cameraSpeed;
-                        }
-                        if (e.key.keysym.sym == SDLK_UP) {
-                            cameraPos -= cameraForward * cameraSpeed;
-                        }
-                        if (e.key.keysym.sym == SDLK_DOWN) {
-                            cameraPos += cameraForward * cameraSpeed;
-                        }
-                        if (e.key.keysym.sym == SDLK_w) {
-                            cameraPos += cameraUp * cameraSpeed;
-                        }
-                        if (e.key.keysym.sym == SDLK_s) {
-                            cameraPos -= cameraUp * cameraSpeed;
-                        }
-                    } else {
-                        if (e.key.keysym.sym == SDLK_LEFT) {
-                            cameraYaw = cameraYaw - 10 * cameraSpeed;
-                            if (cameraYaw < 0) cameraYaw = 360;
-                            float hyp = glm::abs(glm::sqrt(cameraPos.x * cameraPos.x + cameraPos.y * cameraPos.y));
-                            float theta = cameraYaw;
-                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
-                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
-                        }
-                        if (e.key.keysym.sym == SDLK_RIGHT) {
-                            cameraYaw = cameraYaw + 10 * cameraSpeed;
-                            if (cameraYaw > 360) cameraYaw = 0;
-                            float hyp = glm::abs(glm::sqrt(cameraPos.x * cameraPos.x + cameraPos.y * cameraPos.y));
-                            float theta = cameraYaw;
-                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
-                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
-                        }
-                        if (e.key.keysym.sym == SDLK_UP) {
-                            float h2 = cameraPos.z + cameraSpeed;
-                            if (h2 > maxHeight)
-                                h2 = maxHeight - 0.01f;
-                            cameraPos.z = h2;
-                            cameraPitch = -90 + glm::degrees(glm::acos(h2 / r));
-                            float hyp = glm::abs(glm::sqrt(r * r - h2 * h2));
-                            float theta = cameraYaw;
-                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
-                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
-                        }
-                        if (e.key.keysym.sym == SDLK_DOWN) {
-                            float h2 = cameraPos.z - cameraSpeed;
-                            if (h2 < minHeight)
-                                h2 = minHeight + 0.01f;
-                            cameraPos.z = h2;
-                            cameraPitch = -90 + glm::degrees(glm::acos(h2 / r));
-                            float hyp = glm::abs(glm::sqrt(r * r - h2 * h2));
-                            float theta = cameraYaw;
-                            cameraPos.y = hyp * glm::sin(glm::radians(theta));
-                            cameraPos.x = hyp * glm::cos(glm::radians(theta));
-                        }
-                        if (e.key.keysym.sym == SDLK_z) {
-                            r += 0.2f;
-                        }
-                        if (e.key.keysym.sym == SDLK_z) {
-                            r -= 0.2f;
-                        }
+                    if (e.key.keysym.sym == SDLK_LEFT) {
+                        cameraYaw = cameraYaw - 10 * cameraSpeed;
+                        if (cameraYaw < 0) cameraYaw = 360 + cameraYaw;
+                        float hyp = glm::abs(glm::sqrt(cameraPos.x * cameraPos.x + cameraPos.y * cameraPos.y));
+                        float theta = cameraYaw;
+                        cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                        cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                    }
+                    if (e.key.keysym.sym == SDLK_RIGHT) {
+                        cameraYaw = cameraYaw + 10 * cameraSpeed;
+                        if (cameraYaw > 360) cameraYaw = 0 + cameraYaw - 360;
+                        float hyp = glm::abs(glm::sqrt(cameraPos.x * cameraPos.x + cameraPos.y * cameraPos.y));
+                        float theta = cameraYaw;
+                        cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                        cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                    }
+                    if (e.key.keysym.sym == SDLK_UP) {
+                        float h2 = cameraPos.z + cameraSpeed;
+                        if (h2 > maxHeight)
+                            h2 = maxHeight - 0.0001f;
+                        cameraPos.z = h2;
+                        cameraPitch = -90 + glm::degrees(glm::acos(h2 / r));
+                        float hyp = glm::abs(glm::sqrt(r * r - h2 * h2));
+                        float theta = cameraYaw;
+                        cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                        cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                    }
+                    if (e.key.keysym.sym == SDLK_DOWN) {
+                        float h2 = cameraPos.z - cameraSpeed;
+                        if (h2 < minHeight)
+                            h2 = minHeight + 0.01f;
+                        cameraPos.z = h2;
+                        cameraPitch = -90 + glm::degrees(glm::acos(h2 / r));
+                        float hyp = glm::abs(glm::sqrt(r * r - h2 * h2));
+                        float theta = cameraYaw;
+                        cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                        cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                    }
+                    if (e.key.keysym.sym == SDLK_z) {
+                        r = r - cameraSpeed;
+                        cameraPos.z = r * glm::cos(glm::radians(90 + cameraPitch));
+                        float hyp = glm::abs(glm::sqrt(r * r - cameraPos.z * cameraPos.z));
+                        float theta = cameraYaw;
+                        cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                        cameraPos.x = hyp * glm::cos(glm::radians(theta));
+                    }
+                    if (e.key.keysym.sym == SDLK_x) {
+                        r = r + cameraSpeed;
+                        cameraPos.z = r * glm::cos(glm::radians(90 + cameraPitch));
+                        float hyp = glm::abs(glm::sqrt(r * r - cameraPos.z * cameraPos.z));
+                        float theta = cameraYaw;
+                        cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                        cameraPos.x = hyp * glm::cos(glm::radians(theta));
                     }
                 }
         }
@@ -282,7 +269,6 @@ int main(int argc, char *argv[]) {
 
 
         if (show_render) {
-
             ImGui::Begin("Camera Info");
             ImGui::Text("Displays information about the camera");
             ImGui::Text("X position %f", cameraPos.x);
@@ -298,6 +284,13 @@ int main(int argc, char *argv[]) {
             if (ImGui::Button("Rotate")) {
                 model = glm::rotate(glm::mat4(1.0f), glm::radians(rotationAmount),
                                     glm::vec3(0.0f, 1.0f, 0.0f));
+            }
+            ImGui::SliderFloat("Zoom", &r, 1.0f, 6.0f);
+            if (ImGui::Button("Apply")) {
+                float hyp = glm::abs(glm::sqrt(r * r - cameraPos.z * cameraPos.z));
+                float theta = cameraYaw;
+                cameraPos.y = hyp * glm::sin(glm::radians(theta));
+                cameraPos.x = hyp * glm::cos(glm::radians(theta));
             }
             ImGui::End();
             ImGui::Begin("Viewport");
